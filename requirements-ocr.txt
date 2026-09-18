@@ -1,2 +1,2 @@
-easyocr>=1.6.0
+easyocr>=1.7.2
 paddleocr>=2.5.1
