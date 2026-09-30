@@ -1,4 +1,4 @@
-﻿name: Release
+name: Release
 
 on:
   push:
@@ -67,7 +67,7 @@ jobs:
           tar -czf "gatekeeper-edge-${VERSION}.tar.gz" "${PKG_DIR}"
 
       - name: Publish GitHub release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.ref_name }}
           generate_release_notes: true
