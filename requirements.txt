@@ -6,7 +6,7 @@ cairosvg>=2.7.1
 openvino>=2023.3.0
 opencv-python-headless>=4.8.0
 ultralytics>=8.0.0
-supervision>=0.18.0
+supervision>=0.30.5
 psutil>=5.9.8
 africastalking>=1.2.5
 
