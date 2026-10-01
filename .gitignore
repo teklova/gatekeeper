@@ -7,10 +7,13 @@ __pycache__/
 # Virtual Environments
 venv/
 .venv/
+.venv-*/
 env/
 
 # Local secrets and environment files
 .env
+.env.*
+!.env.example
 
 # Build outputs
 dist/
@@ -20,6 +23,9 @@ build/
 # Local database & runtime logs
 gatekeeper.db
 *.db
+*.db3
+*.sqlite
+*.sqlite3
 data/*.db
 *.db-wal
 *.db-shm
