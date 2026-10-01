@@ -1,7 +1,9 @@
 import hmac
 import json
+import logging
 import os
 import secrets
+import sqlite3
 import shutil
 import threading
 import time
@@ -11,6 +13,7 @@ from typing import Any, Dict, Optional, Tuple
 from urllib.parse import urlparse
 
 from gatekeeper.config_loader import get_config
+from gatekeeper.db import get_pending_audit_events, mark_audit_events_synced
 
 try:
     import jsonschema
@@ -28,6 +31,7 @@ import requests
 DEFAULT_FLEET_URL = os.environ.get("FLEET_MANAGEMENT_URL", "https://fleet.example.com")
 DEFAULT_CACHE_PATH = Path("data") / "remote_config.json"
 SCHEMA_PATH = Path(__file__).resolve().with_name("remote_config.schema.json")
+logger = logging.getLogger(__name__)
 
 
 def validate_config_schema(config: Dict[str, Any]) -> bool:
@@ -84,6 +88,9 @@ class RemoteSyncWorker:
         telemetry_supplier: Optional[Any] = None,
         tenant_id: Optional[str] = None,
         site_id: Optional[str] = None,
+        db_path: Optional[str] = None,
+        audit_batch_size: int = 100,
+        audit_endpoint_path: str = "/api/v1/audit-events/batch",
     ):
         config = get_config()
         self.fleet_url = fleet_url.rstrip("/")
@@ -100,6 +107,9 @@ class RemoteSyncWorker:
         self._telemetry_supplier = telemetry_supplier
         self.tenant_id = str(tenant_id or config.get("tenant_id") or config.get("client_id") or "").strip()
         self.site_id = str(site_id or config.get("site_id") or "").strip()
+        self.db_path = str(db_path or config.get("db_path") or "data/gatekeeper.db")
+        self.audit_batch_size = max(1, int(audit_batch_size))
+        self.audit_endpoint_path = "/" + audit_endpoint_path.strip("/")
         self.account_status = "active"
         self.control_plane_state: Dict[str, Any] = {
             "account_status": self.account_status,
@@ -201,6 +211,42 @@ class RemoteSyncWorker:
             return False
         return True
 
+    def _flush_audit_queue(self) -> int:
+        if not self._remote_backend_enabled():
+            return 0
+
+        if not self._request_signing_secret():
+            logger.critical("Audit sync is disabled because DEVICE_SECRET is not configured")
+            return 0
+
+        events = get_pending_audit_events(self.audit_batch_size, self.db_path)
+        if not events:
+            return 0
+
+        payload = {
+            "device_id": self._device_id(),
+            **self._tenant_scope(),
+            "events": events,
+        }
+        body_text = self._serialize_json_body(payload)
+        event_ids = [int(event["id"]) for event in events]
+        idempotency_key = sha256(body_text.encode("utf-8")).hexdigest()
+        response = requests.post(
+            f"{self.fleet_url}{self.audit_endpoint_path}",
+            data=body_text,
+            headers={
+                "Content-Type": "application/json",
+                "Idempotency-Key": idempotency_key,
+                **self._build_signed_headers(body_text),
+            },
+            timeout=5,
+            allow_redirects=False,
+        )
+        response.raise_for_status()
+        if not 200 <= response.status_code < 300:
+            raise requests.HTTPError(f"Audit sync returned unexpected status {response.status_code}")
+        return mark_audit_events_synced(event_ids, self.db_path)
+
     def collect_telemetry(self) -> Dict[str, Any]:
         now = time.time()
         if psutil is not None:
@@ -298,6 +344,11 @@ class RemoteSyncWorker:
             response.raise_for_status()
         except (requests.RequestException, TimeoutError, OSError):
             pass
+
+        try:
+            self._flush_audit_queue()
+        except (requests.RequestException, TimeoutError, OSError, sqlite3.Error) as exc:
+            logger.warning("Audit queue sync failed; pending rows retained: %s", exc)
 
         try:
             response = requests.get(

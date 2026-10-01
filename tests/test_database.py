@@ -5,7 +5,12 @@ import time
 import unittest
 from datetime import datetime
 
-from gatekeeper.db import get_daily_vehicle_count
+from gatekeeper.db import (
+    get_daily_vehicle_count,
+    get_pending_audit_events,
+    log_vehicle_exit,
+    mark_audit_events_synced,
+)
 from gatekeeper.tracker import VehicleTracker
 
 
@@ -104,6 +109,20 @@ class TestCarwashDatabase(unittest.TestCase):
         tracker._log_audit_event("SUV", now, now, 14.0)
 
         self.assertEqual(get_daily_vehicle_count(self.db_path), 2)
+
+    def test_pending_audit_events_are_cleared_only_when_acknowledged(self):
+        now = datetime.now()
+        log_vehicle_exit("CAR", "Gate 1", now, now, 12.0, db_path=self.db_path)
+        log_vehicle_exit("SUV", "Gate 2", now, now, 14.0, db_path=self.db_path)
+
+        pending = get_pending_audit_events(limit=1, db_path=self.db_path)
+        self.assertEqual(len(pending), 1)
+        self.assertEqual(pending[0]["vehicle_type"], "CAR")
+        self.assertEqual(mark_audit_events_synced([pending[0]["id"]], self.db_path), 1)
+        self.assertEqual(mark_audit_events_synced([pending[0]["id"]], self.db_path), 0)
+
+        remaining = get_pending_audit_events(limit=10, db_path=self.db_path)
+        self.assertEqual([event["vehicle_type"] for event in remaining], ["SUV"])
 
 
 if __name__ == "__main__":

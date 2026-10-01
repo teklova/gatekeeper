@@ -51,6 +51,11 @@ class GatekeeperRunner:
             telemetry_supplier=self._live_telemetry,
             tenant_id=self.config.get("tenant_id") or self.config.get("client_id"),
             site_id=self.config.get("site_id"),
+            db_path=self.config.get("db_path", "data/gatekeeper.db"),
+            audit_batch_size=int(self.config.get("audit_batch_size", 100)),
+            audit_endpoint_path=self.config.get(
+                "audit_sync_endpoint_path", "/api/v1/audit-events/batch"
+            ),
         )
 
         self.health_server = HealthCheckServer(

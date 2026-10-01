@@ -182,3 +182,37 @@ def get_daily_vehicle_count(db_path: str = DB_NAME) -> int:
         row = cursor.fetchone()
         return int(row[0] or 0) if row else 0
 
+
+def get_pending_audit_events(limit: int = 100, db_path: str = DB_NAME) -> list[dict]:
+    """Return a bounded batch of audit rows that have not been acknowledged remotely."""
+    ensure_database(db_path)
+    with _connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute(
+            """
+            SELECT id, vehicle_id, tenant_id, site_id, vehicle_type, plate_number,
+                   gate_id, entry_time, exit_time, dwell_seconds, anomaly_type, unpaid_flag
+            FROM carwash_audit
+            WHERE is_synced = 0
+            ORDER BY id
+            LIMIT ?
+            """,
+            (max(1, int(limit)),),
+        ).fetchall()
+        return [dict(row) for row in rows]
+
+
+def mark_audit_events_synced(event_ids: list[int], db_path: str = DB_NAME) -> int:
+    """Mark acknowledged audit rows synced and return the number of affected rows."""
+    if not event_ids:
+        return 0
+
+    ensure_database(db_path)
+    with _connect(db_path) as conn:
+        cursor = conn.executemany(
+            "UPDATE carwash_audit SET is_synced = 1 WHERE id = ? AND is_synced = 0",
+            [(int(event_id),) for event_id in event_ids],
+        )
+        conn.commit()
+        return cursor.rowcount
+

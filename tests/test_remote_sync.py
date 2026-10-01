@@ -3,12 +3,14 @@ import os
 import tempfile
 import time
 import unittest
+from datetime import datetime
 from hashlib import sha256
 import hmac
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
+from gatekeeper.db import get_pending_audit_events, log_vehicle_exit
 from gatekeeper.remote_sync import RemoteSyncWorker
 from gatekeeper.runner import GatekeeperRunner
 
@@ -18,6 +20,26 @@ class TestRemoteSyncWorker(unittest.TestCase):
         self.temp_dir = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp_dir.cleanup)
         self.cache_path = Path(self.temp_dir.name) / "remote_config.json"
+        self.db_path = str(Path(self.temp_dir.name) / "audit.db")
+
+    @patch("gatekeeper.remote_sync.requests.post")
+    @patch.dict(os.environ, {"DEVICE_SECRET": "test-signing-secret"}, clear=False)
+    def test_audit_batch_is_marked_synced_after_successful_response(self, mock_post):
+        mock_post.return_value.status_code = 200
+        mock_post.return_value.raise_for_status.return_value = None
+        now = datetime.now()
+        log_vehicle_exit("CAR", "Gate 1", now, now, 12.0, db_path=self.db_path)
+        worker = RemoteSyncWorker(
+            cache_path=str(self.cache_path),
+            fleet_url="https://fleet.internal",
+            db_path=self.db_path,
+        )
+
+        self.assertEqual(worker._flush_audit_queue(), 1)
+        self.assertEqual(get_pending_audit_events(db_path=self.db_path), [])
+        sent_payload = json.loads(mock_post.call_args.kwargs["data"])
+        self.assertEqual(sent_payload["events"][0]["vehicle_type"], "CAR")
+        self.assertTrue(mock_post.call_args.kwargs["headers"]["Idempotency-Key"])
 
     def test_collect_telemetry_uses_environment_device_id(self):
         with patch.dict(os.environ, {"GATEKEEPER_DEVICE_ID": "edge-42"}, clear=False):
