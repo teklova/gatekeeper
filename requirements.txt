@@ -8,7 +8,7 @@ opencv-python-headless>=4.8.0
 ultralytics>=8.0.0
 supervision>=0.18.0
 psutil>=5.9.8
-africastalking>=1.2.5
+africastalking>=2.0.3
 
 # Optional OCR and LPR dependencies live in requirements-ocr.txt.
 # Note: model weight files (e.g., yolo11n.pt) are not Python packages - place them in the repo or set `model_path` to your weight location.
