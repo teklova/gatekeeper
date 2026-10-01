@@ -1,0 +1,21 @@
+{
+  "model_path": "models/yolo11n_openvino_model",
+  "gate_polygon": [
+    [
+      277,
+      456
+    ],
+    [
+      655,
+      366
+    ],
+    [
+      1139,
+      499
+    ],
+    [
+      835,
+      700
+    ]
+  ]
+}

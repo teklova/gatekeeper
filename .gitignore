@@ -1,0 +1,61 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# Virtual Environments
+venv/
+.venv/
+.venv-*/
+env/
+
+# Local secrets and environment files
+.env
+.env.*
+!.env.example
+
+# Build outputs
+dist/
+build/
+*.egg-info/
+
+# Local database & runtime logs
+gatekeeper.db
+*.db
+*.db3
+*.sqlite
+*.sqlite3
+data/*.db
+*.db-wal
+*.db-shm
+*.db-journal
+*.log
+*.errors.txt
+kernel_errors.txt
+kernel.errors.txt
+
+# Test / coverage output
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+unittest*.log
+
+# Heavy weights & test media
+yolo11n.pt
+videos/
+*.mp4
+*.avi
+*.jpg
+*.jpeg
+*.png
+
+# IDE & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

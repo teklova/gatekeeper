@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gatekeeper"
+version = "0.1.2"
+description = "Gatekeeper vehicle tracking and Gate reconciliation system"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "cairosvg>=2.7.1",
+  "openvino>=2023.3.0",
+  "opencv-python-headless>=4.8.0",
+  "ultralytics>=8.0.0",
+  "supervision>=0.18.0",
+  "psutil>=5.9.8",
+  "africastalking>=1.2.5",
+]
+
+[project.optional-dependencies]
+dev = [
+  "build>=1.2",
+  "pytest>=8.0",
+  "ruff>=0.6",
+]
+
+[tool.setuptools]
+packages = ["gatekeeper"]
+

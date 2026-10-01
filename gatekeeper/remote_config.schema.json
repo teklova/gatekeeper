@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "GatekeeperRemoteConfig",
+  "type": "object",
+  "properties": {
+    "yolo_confidence_threshold": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0
+    },
+    "dwell_threshold_seconds": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "telemetry_interval_seconds": {
+      "type": "integer",
+      "minimum": 10
+    },
+    "roi_polygons": {
+      "type": "array",
+      "items": {
+        "type": "array"
+      }
+    },
+    "active_cameras": {
+      "type": ["array", "object"]
+    }
+  },
+  "additionalProperties": true
+}

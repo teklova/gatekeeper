@@ -1,0 +1,17 @@
+{
+  "2026-09-07": {
+    "avg_dwell_seconds": 11.27,
+    "by_vehicle": {
+      "CAR": {
+        "avg_dwell_seconds": 11.56,
+        "count": 181
+      },
+      "TRUCK": {
+        "avg_dwell_seconds": 2.55,
+        "count": 6
+      }
+    },
+    "estimated_revenue": 96500.0,
+    "total_vehicles": 187
+  }
+}

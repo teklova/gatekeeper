@@ -1,0 +1,41 @@
+﻿services:
+  gatekeeper:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: gatekeeper:latest
+    container_name: gatekeeper-edge
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      - GATEKEEPER_DEVICE_ID=${GATEKEEPER_DEVICE_ID:-edge-mini-pc-01}
+      - DEVICE_SECRET=${DEVICE_SECRET:?Set DEVICE_SECRET in the edge .env file}
+      - FLEET_URL=${FLEET_URL:-https://gatekeeper.teklova.com}
+      - DB_PATH=${DB_PATH:-/app/data/gatekeeper.db}
+      - SYNC_WARNING_THRESHOLD_SECONDS=${SYNC_WARNING_THRESHOLD_SECONDS:-180}
+      - CLOUD_CHECKIN_INTERVAL_SECONDS=${CLOUD_CHECKIN_INTERVAL_SECONDS:-60}
+      - HEALTH_PORT=8080
+    volumes:
+      - ./data:/app/data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    mem_limit: 2g
+    cpus: "1.50"
+    deploy:
+      resources:
+        limits:
+          cpus: "1.50"
+          memory: 2g
+        reservations:
+          cpus: "0.50"
+          memory: 512m
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s

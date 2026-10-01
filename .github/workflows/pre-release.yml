@@ -1,0 +1,44 @@
+﻿name: gatekeeper pre-release validation
+
+on:
+  push:
+    tags:
+      - 'v*-rc*'
+      - 'v*-beta*'
+      - 'v*-alpha*'
+  workflow_dispatch:
+
+jobs:
+  validate-candidate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run unit tests
+        run: |
+          python -m unittest discover -s tests -v
+
+      - name: Build package
+        run: |
+          python -m build
+
+      - name: Validate candidate tag format
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          echo "Validating release candidate tag: $TAG"
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-(alpha|beta|rc)\.[0-9]+$ ]]; then
+            echo "Tag format is invalid. Expected examples: v1.2.3-rc.1, v1.2.3-beta.2"
+            exit 1
+          fi
+

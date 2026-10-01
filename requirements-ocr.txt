@@ -1,0 +1,2 @@
+easyocr>=1.6.0
+paddleocr>=2.5.1
