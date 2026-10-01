@@ -2,42 +2,50 @@
 
 on:
   push:
-    branches: ["**"]
+    branches: [main]
+    tags: ["v*.*.*"]
   pull_request:
-    branches: ["**"]
-  release:
-    types: [published]
+    branches: [main]
+
+  permissions:
+    contents: read
 
 jobs:
   test-and-lint:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.12"]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install flake8 ruff
 
-      - name: Scan for secrets with gitleaks
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up Go for Gitleaks
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+
+      - name: Install open-source Gitleaks CLI
+        run: go install github.com/zricethezav/gitleaks/v8@v8.24.3
+
+      - name: Scan git history for secrets
+        run: "$(go env GOPATH)/bin/gitleaks detect --source . --redact --verbose --exit-code 1"
 
       - name: Run unit tests
-        run: python -m unittest discover -s tests -p "test_*.py"
-
-      - name: Run lint checks
-        run: |
-          flake8 gatekeeper main.py scripts || true
-          ruff check . || true
+        run: python -m unittest discover tests
 
   build-and-publish:
     if: startsWith(github.ref, 'refs/tags/v')

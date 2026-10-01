@@ -1,14 +1,41 @@
-import os
-import signal
-import threading
 import time
 import unittest
 from types import SimpleNamespace
+from unittest.mock import Mock
 
 from gatekeeper.runner import GatekeeperRunner
 
 
 class TestRunnerLifecycle(unittest.TestCase):
+    def test_runner_aborts_startup_when_cloud_authentication_fails(self):
+        runner = GatekeeperRunner.__new__(GatekeeperRunner)
+        runner.setup = Mock()
+        runner.stop = Mock()
+        runner.sync_worker = SimpleNamespace(
+            _remote_backend_enabled=lambda: True,
+            authenticate=Mock(side_effect=PermissionError("hardware token rejected")),
+        )
+
+        with self.assertRaises(PermissionError):
+            runner.start()
+
+        runner.stop.assert_called_once_with()
+
+    def test_runner_aborts_startup_when_cloud_endpoint_is_unconfigured(self):
+        runner = GatekeeperRunner.__new__(GatekeeperRunner)
+        runner.setup = Mock()
+        runner.stop = Mock()
+        runner.sync_worker = SimpleNamespace(
+            _remote_backend_enabled=lambda: False,
+            authenticate=Mock(),
+        )
+
+        with self.assertRaises(PermissionError):
+            runner.start()
+
+        runner.sync_worker.authenticate.assert_not_called()
+        runner.stop.assert_called_once_with()
+
     def test_runner_initializes_components(self):
         runner = GatekeeperRunner(config_path="config.json")
         runner.setup()

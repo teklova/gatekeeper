@@ -3,14 +3,36 @@ updates:
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
+    open-pull-requests-limit: 5
+    groups:
+      python-routine-updates:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    # Review these manually against supported platform wheels and model runtimes.
+    ignore:
+      - dependency-name: "torch"
+      - dependency-name: "torchvision"
+      - dependency-name: "opencv-python-headless"
+      - dependency-name: "openvino"
+      - dependency-name: "ultralytics"
+      - dependency-name: "supervision"
+      - dependency-name: "easyocr"
 
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "monthly"
+    open-pull-requests-limit: 3
+    groups:
+      github-actions-monthly:
+        patterns:
+          - "*"

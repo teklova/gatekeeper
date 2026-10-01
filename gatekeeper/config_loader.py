@@ -48,6 +48,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "min_dwell_threshold_seconds": 2,
     "max_dwell_threshold_seconds": 14400,
     "health_port": 8080,
+    "sync_warning_threshold_seconds": 180,
+    "cloud_checkin_interval_seconds": 60,
     "db_path": _default_db_path(),
     "gate_polygon": [[100, 200], [500, 200], [500, 600], [100, 600]],
     "pricing_tiers": {
@@ -102,6 +104,8 @@ def _environment_overrides() -> Dict[str, Any]:
         ("MIN_DWELL_SECONDS", "min_dwell_threshold_seconds", int),
         ("MAX_DWELL_SECONDS", "max_dwell_threshold_seconds", int),
         ("HEALTH_PORT", "health_port", int),
+        ("SYNC_WARNING_THRESHOLD_SECONDS", "sync_warning_threshold_seconds", int),
+        ("CLOUD_CHECKIN_INTERVAL_SECONDS", "cloud_checkin_interval_seconds", int),
         ("AT_SANDBOX_MODE", "sandbox_mode", bool),
         ("AT_SANDBOX_API_KEY", "sandbox_api_key", str),
         ("NOTIFIER_RECIPIENT_PHONE", "recipient_phone", str),

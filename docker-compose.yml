@@ -7,10 +7,14 @@
     container_name: gatekeeper-edge
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     environment:
       - GATEKEEPER_DEVICE_ID=${GATEKEEPER_DEVICE_ID:-edge-mini-pc-01}
-      - FLEET_MANAGEMENT_URL=${FLEET_MANAGEMENT_URL:-https://fleet.tektally.com}
+      - DEVICE_SECRET=${DEVICE_SECRET:?Set DEVICE_SECRET in the edge .env file}
+      - FLEET_URL=${FLEET_URL:-https://gatekeeper.teklova.com}
+      - DB_PATH=${DB_PATH:-/app/data/gatekeeper.db}
+      - SYNC_WARNING_THRESHOLD_SECONDS=${SYNC_WARNING_THRESHOLD_SECONDS:-180}
+      - CLOUD_CHECKIN_INTERVAL_SECONDS=${CLOUD_CHECKIN_INTERVAL_SECONDS:-60}
       - HEALTH_PORT=8080
     volumes:
       - ./data:/app/data

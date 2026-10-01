@@ -22,6 +22,12 @@ class TestConfigLoader(unittest.TestCase):
                 "MIN_DWELL_SECONDS": os.environ.get("MIN_DWELL_SECONDS"),
                 "MAX_DWELL_SECONDS": os.environ.get("MAX_DWELL_SECONDS"),
                 "HEALTH_PORT": os.environ.get("HEALTH_PORT"),
+                "SYNC_WARNING_THRESHOLD_SECONDS": os.environ.get(
+                    "SYNC_WARNING_THRESHOLD_SECONDS"
+                ),
+                "CLOUD_CHECKIN_INTERVAL_SECONDS": os.environ.get(
+                    "CLOUD_CHECKIN_INTERVAL_SECONDS"
+                ),
                 "AT_SANDBOX_MODE": os.environ.get("AT_SANDBOX_MODE"),
                 "AT_SANDBOX_API_KEY": os.environ.get("AT_SANDBOX_API_KEY"),
             }
@@ -35,6 +41,8 @@ class TestConfigLoader(unittest.TestCase):
                 os.environ["MIN_DWELL_SECONDS"] = "4"
                 os.environ["MAX_DWELL_SECONDS"] = "900"
                 os.environ["HEALTH_PORT"] = "9090"
+                os.environ["SYNC_WARNING_THRESHOLD_SECONDS"] = "240"
+                os.environ["CLOUD_CHECKIN_INTERVAL_SECONDS"] = "120"
                 os.environ["AT_SANDBOX_MODE"] = "true"
                 os.environ["AT_SANDBOX_API_KEY"] = "sandbox-test-key"
 
@@ -48,6 +56,8 @@ class TestConfigLoader(unittest.TestCase):
                 self.assertEqual(config["min_dwell_threshold_seconds"], 4)
                 self.assertEqual(config["max_dwell_threshold_seconds"], 900)
                 self.assertEqual(config["health_port"], 9090)
+                self.assertEqual(config["sync_warning_threshold_seconds"], 240)
+                self.assertEqual(config["cloud_checkin_interval_seconds"], 120)
                 self.assertTrue(config["sandbox_mode"])
                 self.assertEqual(config["sandbox_api_key"], "sandbox-test-key")
             finally:
